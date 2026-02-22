@@ -55,6 +55,21 @@ To change the source name or any window’s name or time range:
 
 ---
 
+## Dashboard card (Lovelace)
+
+A Lovelace card is included so you can show your window sensors on a dashboard. Add the card's resource once, then add the card and pick your entities.
+
+1. **Add the resource** — In your dashboard: **Dashboard → ⋮ → Resources → + Add resource → URL** and add:
+   ```
+   /energy-window-tracker/energy-window-card.js
+   ```
+   Type: **JavaScript Module**. (If you use YAML for Lovelace, add the same URL under `resources` in your dashboard YAML with `type: module`.)
+2. **Add the card** — Edit a dashboard, add card, choose **Energy Window Tracker**, then add the sensor entities you want to display.
+
+The card shows each entity's name, current value, and unit. No build step is required.
+
+---
+
 ## Sensor Attributes
 
 | Attribute        | Description                                                       |
