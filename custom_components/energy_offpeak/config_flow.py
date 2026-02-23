@@ -222,7 +222,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         """Single step: source name + window rows (same as initial step 2)."""
         current = {**self.config_entry.data, **self.config_entry.options}
         source_entity = current.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import"
-        existing = current.get(CONF_WINDOWS) or current.get("periods", [])
+        existing = current.get(CONF_WINDOWS) or []
 
         if user_input is not None:
             windows = _collect_windows_from_input(user_input)

@@ -73,15 +73,13 @@ def _time_str(h: int, m: int) -> str:
 
 
 def _parse_windows(config: dict[str, Any]) -> list[WindowConfig]:
-    """Parse window config from entry data. Supports legacy 'periods' key."""
-    windows_data = config.get(CONF_WINDOWS) or config.get("periods", [])
+    """Parse window config from entry data."""
+    windows_data = config.get(CONF_WINDOWS) or []
     windows = []
     for i, p in enumerate(windows_data):
-        start_h, start_m = _parse_hhmm(
-            p.get(CONF_WINDOW_START) or p.get("start", "11:00")
-        )
-        end_h, end_m = _parse_hhmm(p.get(CONF_WINDOW_END) or p.get("end", "14:00"))
-        name = p.get(CONF_WINDOW_NAME) or p.get("name") or f"Window {i + 1}"
+        start_h, start_m = _parse_hhmm(p.get(CONF_WINDOW_START) or "11:00")
+        end_h, end_m = _parse_hhmm(p.get(CONF_WINDOW_END) or "14:00")
+        name = p.get(CONF_WINDOW_NAME) or f"Window {i + 1}"
         windows.append(
             WindowConfig(
                 start_h=start_h,
@@ -173,11 +171,11 @@ class WindowData:
         return 0.0, "after_window (no snapshots)"
 
     async def load(self) -> None:
-        """Load snapshots from storage. Supports legacy 'periods' key."""
+        """Load snapshots from storage."""
         stored = await self._store.async_load()
         if stored:
             self._snapshot_date = stored.get("snapshot_date")
-            snapshots_data = stored.get("windows") or stored.get("periods", {})
+            snapshots_data = stored.get("windows") or {}
             for w in self._windows:
                 if str(w.index) in snapshots_data:
                     sd = snapshots_data[str(w.index)]
