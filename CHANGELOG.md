@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.3.0...v1.4.0) (2026-02-23)
+
+
+### Features
+
+* add multiple entitites ([5d5f953](https://github.com/thedeviousdev/ha-energy-offpeak/commit/5d5f9537c2213f2ed614037481f7f287a7ca02e5))
+* add multiple entitites ([999aa97](https://github.com/thedeviousdev/ha-energy-offpeak/commit/999aa97459b218576f69e8457bc92b59981107ac))
+
+
+### Bug Fixes
+
+* release-please not triggering release ([ee4614d](https://github.com/thedeviousdev/ha-energy-offpeak/commit/ee4614d6cb218741726ec71d170998d338aa9281))
+
 ## [1.3.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.2.0...v1.3.0) (2026-02-23)
 
 
