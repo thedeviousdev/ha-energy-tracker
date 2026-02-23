@@ -38,23 +38,28 @@ After updating the integration (via HACS or by replacing files), **you need to r
 
 ## Configuration
 
+There is **one integration entry** for Energy Window Tracker. All sources and their window sensors appear under that single entry.
+
 1. Go to **Settings → Devices & Services → + Add Integration**
 2. Search for **Energy Window Tracker**
-3. **Step 1** — Enter **sensor name** (optional; defaults to the energy sensor’s name) and select your **energy sensor** (daily cumulative kWh, e.g. `sensor.today_energy_import`). Submit.
-4. **Step 2** — Set **source name** and add **one window**: window name, start time, end time. Submit.
+3. **Step 1** — Select your **energy sensor** (daily cumulative kWh, e.g. `sensor.today_energy_import`). Submit.
+4. **Step 2** — Set **source name** and add **one window** (name, start time, end time). Submit.
 
-Each entry starts with one window and one sensor. Add more windows later via CONFIGURE. You can also add the integration again for another energy sensor or grouping.
+You now have one source with one window. Use **CONFIGURE** to add more sources (other energy sensors) or more windows per source.
 
 ---
 
 ## Updating after setup
 
-To change the source name or add/remove windows:
+To add sources, add/remove windows, or edit names:
 
 1. Go to **Settings → Devices & Services**
-2. Find **Energy Window Tracker** and click the relevant device/entry
+2. Find **Energy Window Tracker** and click the single entry
 3. Click **CONFIGURE**
-4. The form shows the source name and all current windows plus one empty row. To **add** a window: fill the new row with a name and a time range (start before end). To **remove** a window: set its start time equal to end time (e.g. 00:00–00:00) or leave that row empty. Submit; the integration reloads automatically.
+4. **Menu** — Choose:
+   - **Add new source** — Pick another energy sensor, name it, and add one or more time windows (HH:MM; start before end). Submit, then choose **Done** when finished.
+   - **Edit: [name]** — Change the source name or its windows. Set a window’s start = end (e.g. 00:00–00:00) to remove it.
+   - **Done** — Save and close. The integration reloads automatically.
 
 ---
 
@@ -72,4 +77,4 @@ To change the source name or add/remove windows:
 
 - The source sensor **must** be a daily cumulative total that resets at midnight (e.g. from a Shelly, Fronius, SolarEdge, or similar device)
 - If HA restarts during a window, the start snapshot is restored from storage and the end snapshot will be captured at the window end time
-- You can configure multiple instances for different sensors or window sets
+- All sources (energy sensors) and their window sensors live under one integration entry

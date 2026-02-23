@@ -32,9 +32,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Edit source and windows",
-        "description": "Row 1 is your first window. The last row is for adding another: enter a name and start/end in HH:MM (e.g. 09:00, 17:00) with start before end. Leave the last row as 00:00 and 00:00 to skip. To remove a window, set its start and end to the same time (e.g. 00:00 and 00:00).",
+        "title": "Manage sources",
+        "description": "Add a new source (energy sensor + windows), edit an existing source, or Done to save. All entities appear under this single integration.",
         "data": {
+          "menu": "Action",
           "name": "Source name",
           "w0_name": "Window 1 name",
           "w0_start": "Window 1 start",
@@ -67,11 +68,28 @@
           "w9_start": "Window 10 start",
           "w9_end": "Window 10 end"
         }
+      },
+      "add_source": {
+        "title": "Add new source",
+        "description": "Select energy sensor, source name, and at least one time window (start before end, HH:MM).",
+        "data": {
+          "name": "Source name",
+          "source_entity": "Energy sensor"
+        }
+      },
+      "edit_source": {
+        "title": "Edit source",
+        "description": "Edit name and time windows for this source. Times in HH:MM; start must be before end. Set start = end to remove a window.",
+        "data": {
+          "name": "Source name"
+        }
       }
     },
     "error": {
       "window_start_after_end": "Start time must be earlier than end time.",
-      "at_least_one_window": "At least one window is required."
+      "at_least_one_window": "At least one window is required.",
+      "at_least_one_source": "Keep at least one source, or add one before Done.",
+      "source_entity_required": "Select an energy sensor."
     }
   }
 }
