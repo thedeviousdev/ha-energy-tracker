@@ -3,6 +3,7 @@
 DOMAIN = "energy_offpeak"
 
 CONF_SOURCE_ENTITY = "source_entity"
+CONF_SOURCES = "sources"
 CONF_NAME = "name"
 CONF_WINDOWS = "windows"
 CONF_WINDOW_START = "start"

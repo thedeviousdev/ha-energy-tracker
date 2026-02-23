@@ -28,6 +28,7 @@ from .const import (
     ATTR_SOURCE_ENTITY,
     ATTR_STATUS,
     CONF_NAME,
+    CONF_SOURCES,
     CONF_WINDOWS,
     CONF_WINDOW_END,
     CONF_WINDOW_NAME,
@@ -235,47 +236,79 @@ class WindowData:
         self._notify_update()
 
 
+def _source_slug(source_entity: str, source_index: int) -> str:
+    """Stable key for a source (storage and unique_id)."""
+    if source_entity:
+        return source_entity.replace(".", "_").replace(":", "_")[:64]
+    return f"source_{source_index}"
+
+
+def _get_sources_from_config(config: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return list of source dicts from config (CONF_SOURCES)."""
+    raw = config.get(CONF_SOURCES)
+    if isinstance(raw, list):
+        return list(raw)
+    return []
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
+    """Set up the sensor platform (one or more sources under this entry)."""
     config = {**entry.data, **entry.options}
-    windows = _parse_windows(config)
-
-    store = Store(
-        hass,
-        STORAGE_VERSION,
-        f"{STORAGE_KEY}_{entry.entry_id}",
-    )
-
-    data = WindowData(
-        hass=hass,
-        entry_id=entry.entry_id,
-        source_entity=config[CONF_SOURCE_ENTITY],
-        windows=windows,
-        store=store,
-    )
-    await data.load()
+    sources = _get_sources_from_config(config)
+    if not sources:
+        return
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = data
+    entry_data: dict[str, WindowData] = {}
+    hass.data[DOMAIN][entry.entry_id] = entry_data
+    all_sensors: list[WindowEnergySensor] = []
 
-    sensors = [
-        WindowEnergySensor(
+    for source_index, source_config in enumerate(sources):
+        if not isinstance(source_config, dict):
+            continue
+        source_entity = source_config.get(CONF_SOURCE_ENTITY)
+        if not source_entity:
+            continue
+        source_name = source_config.get(CONF_NAME) or "Window"
+        windows = _parse_windows(source_config)
+        if not windows:
+            continue
+
+        slug = _source_slug(source_entity, source_index)
+        store = Store(
+            hass,
+            STORAGE_VERSION,
+            f"{STORAGE_KEY}_{entry.entry_id}_{slug}",
+        )
+        data = WindowData(
             hass=hass,
             entry_id=entry.entry_id,
-            config_name=config[CONF_NAME],
-            window=window,
-            data=data,
+            source_entity=source_entity,
             windows=windows,
-            is_first=(i == 0),
+            store=store,
         )
-        for i, window in enumerate(windows)
-    ]
+        await data.load()
+        entry_data[slug] = data
 
-    async_add_entities(sensors, update_before_add=True)
+        for i, window in enumerate(windows):
+            sensor = WindowEnergySensor(
+                hass=hass,
+                entry_id=entry.entry_id,
+                config_name=source_name,
+                window=window,
+                data=data,
+                windows=windows,
+                is_first=(i == 0),
+                source_slug=slug,
+                window_index=i,
+            )
+            all_sensors.append(sensor)
+
+    async_add_entities(all_sensors, update_before_add=True)
 
 
 class WindowEnergySensor(RestoreSensor):
@@ -296,6 +329,8 @@ class WindowEnergySensor(RestoreSensor):
         data: WindowData,
         windows: list[WindowConfig],
         is_first: bool = False,
+        source_slug: str | None = None,
+        window_index: int = 0,
     ) -> None:
         self.hass = hass
         self._entry_id = entry_id
@@ -304,7 +339,11 @@ class WindowEnergySensor(RestoreSensor):
         self._windows = windows
         self._is_first = is_first
         self._attr_name = f"{config_name} - {window.name}"
-        self._attr_unique_id = f"{entry_id}_{window.index}"
+        # Stable unique_id: entry + source + window index (survives add/remove of other sources)
+        if source_slug is not None:
+            self._attr_unique_id = f"{entry_id}_{source_slug}_{window_index}"
+        else:
+            self._attr_unique_id = f"{entry_id}_{window.index}"
 
     async def async_added_to_hass(self) -> None:
         """Restore state and register listeners."""
