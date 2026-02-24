@@ -195,6 +195,7 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize config flow."""
         self._source_entity: str | None = None
+        self._sensor_name: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -202,6 +203,7 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step 1: sensor name and energy sensor only."""
         if user_input is not None:
             self._source_entity = user_input[CONF_SOURCE_ENTITY]
+            self._sensor_name = (user_input.get(CONF_SENSOR_NAME) or "").strip()
             return await self.async_step_windows()
 
         return self.async_show_form(
@@ -243,11 +245,17 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
             source_name = _get_entity_friendly_name(self.hass, source_entity)
+            # Entry title for "Integration entries": user-defined sensor name, or entity name, or default
+            entry_title = (
+                self._sensor_name
+                or source_name
+                or "Energy Window Tracker"
+            )[:200]
             # Single entry for the whole integration: all sources live under this one entry
             await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title="Energy Window Tracker",
+                title=entry_title,
                 data={
                     CONF_SOURCES: [
                         {
@@ -373,33 +381,15 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Initial screen: source entity (editable) and Submit. Then actions menu."""
+        """Configure Windows: show menu (Add new window, Manage windows, Change source entity)."""
         try:
-            src = self._get_current_source()
-            source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
-            windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
-            if user_input is not None:
-                new_entity = user_input.get(CONF_SOURCE_ENTITY) or source_entity
-                if new_entity:
-                    self._save_source(new_entity, windows)
-                return await self.async_step_actions(None)
-            return self.async_show_form(
-                step_id="init",
-                data_schema=_build_source_entity_schema(source_entity),
-                description_placeholders={"windows_list": ""},
-            )
+            return await self._async_step_manage_impl(user_input)
         except Exception as err:
             _LOGGER.exception(
                 "Energy Window Tracker options flow failed: %s",
                 err,
             )
             raise
-
-    async def async_step_actions(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
-        """Show actions menu: Add new window, Manage windows, Change source entity."""
-        return self._async_step_manage_impl(user_input)
 
     def _async_show_menu(
         self,
@@ -435,7 +425,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
 
         menu_options = _build_init_menu_options()
         return self._async_show_menu(
-            step_id="actions",
+            step_id="init",
             menu_options=menu_options,
             description_placeholders={"windows_list": ""},
             title="Configure Windows",
