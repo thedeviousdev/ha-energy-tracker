@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.9.0...v1.9.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* sensor ([#41](https://github.com/thedeviousdev/ha-energy-offpeak/issues/41)) ([9f661c6](https://github.com/thedeviousdev/ha-energy-offpeak/commit/9f661c6b21bc21ed5252a58c53b3530f193f8d4d))
+
 ## [1.9.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.8.1...v1.9.0) (2026-02-24)
 
 
