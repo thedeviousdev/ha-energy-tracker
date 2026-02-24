@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.13.3...v1.14.0) (2026-02-24)
+
+
+### Features
+
+* **config:** confirm before updating energy source; delete old data and entities on update ([#71](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/71)) ([84886bd](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/84886bde7fa7c58888d910e7dc3bb077ef049d8b))
+
 ## [1.13.3](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.13.2...v1.13.3) (2026-02-24)
 
 
