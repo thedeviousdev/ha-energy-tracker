@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.0.1...v2.0.2) (2026-02-25)
+
+
+### Bug Fixes
+
+* **config:** entity selector schema and normalization for 400 on add ([#97](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/97)) ([42718c0](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/42718c0bb512dbfe06134e8f7d7b1c1e7e945133))
+
 ## [2.0.1](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.0.0...v2.0.1) (2026-02-25)
 
 
