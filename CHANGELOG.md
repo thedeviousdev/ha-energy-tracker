@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.5](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.0.4...v2.0.5) (2026-02-26)
+
+
+### Bug Fixes
+
+* **config:** numberSelector step=0.001 to fix windows step schema ([#103](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/103)) ([6c9deff](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/6c9deff1b4453e6f3aa1c3b74e6e2bafc3ba6505))
+
 ## [2.0.4](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.0.3...v2.0.4) (2026-02-26)
 
 
