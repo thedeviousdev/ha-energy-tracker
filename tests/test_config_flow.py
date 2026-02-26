@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.energy_window_tracker.const import (
     CONF_NAME,
@@ -124,6 +125,94 @@ async def test_windows_validation_invalid_time_range(hass: HomeAssistant) -> Non
     # Flow collects only windows with start < end; this row is skipped -> 0 windows -> at_least_one_window
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "at_least_one_window"}
+
+
+@pytest.mark.asyncio
+async def test_user_flow_source_already_in_use(hass: HomeAssistant) -> None:
+    """Test that selecting a sensor already used by another entry shows error."""
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home Load",
+        data={
+            CONF_SOURCES: [
+                {
+                    CONF_SOURCE_ENTITY: "sensor.today_energy_import",
+                    CONF_NAME: "Home Load",
+                    CONF_WINDOWS: [
+                        {CONF_WINDOW_NAME: "Peak", CONF_WINDOW_START: "09:00", CONF_WINDOW_END: "17:00"}
+                    ],
+                }
+            ]
+        },
+        entry_id="existing_entry_id",
+    )
+    existing.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SOURCE_ENTITY: "sensor.today_energy_import"},
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result.get("errors", {}).get("base") == "source_already_in_use"
+    assert result.get("description_placeholders", {}).get("entry_title") == "Home Load"
+
+
+@pytest.mark.asyncio
+async def test_options_flow_update_source_to_used_sensor_shows_error(
+    hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry
+) -> None:
+    """Test that changing source to a sensor already used by another entry shows error."""
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home Import",
+        data={
+            CONF_SOURCES: [
+                {
+                    CONF_SOURCE_ENTITY: "sensor.today_energy_import",
+                    CONF_NAME: "Home Import",
+                    CONF_WINDOWS: [
+                        {CONF_WINDOW_NAME: "Peak", CONF_WINDOW_START: "09:00", CONF_WINDOW_END: "17:00"}
+                    ],
+                }
+            ]
+        },
+        entry_id="other_entry_id",
+    )
+    other.add_to_hass(hass)
+    # mock_config_entry uses sensor.today_load; we'll try to change it to sensor.today_energy_import
+
+    opts_result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        opts_result["flow_id"],
+        {"next_step_id": "source_entity"},
+    )
+    assert result["step_id"] == "source_entity"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_SOURCE_ENTITY: "sensor.today_energy_import",
+            CONF_NAME: "Import",
+            "remove_previous_entities": True,
+        },
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "source_entity"
+    assert result.get("errors", {}).get("base") == "source_already_in_use"
+    assert result.get("description_placeholders", {}).get("entry_title") == "Home Import"
+
+    # Entry should still have original source
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry
+    sources = entry.options.get(CONF_SOURCES) or entry.data.get(CONF_SOURCES) or []
+    assert sources[0][CONF_SOURCE_ENTITY] == "sensor.today_load"
 
 
 @pytest.mark.asyncio

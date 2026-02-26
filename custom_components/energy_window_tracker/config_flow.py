@@ -351,6 +351,14 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=_build_step_user_schema(),
                     errors={"base": "source_entity_required"},
                 )
+            existing = _entry_using_source_entity(self.hass, self._source_entity, exclude_entry_id=None)
+            if existing is not None:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=_build_step_user_schema(),
+                    errors={"base": "source_already_in_use"},
+                    description_placeholders={"entry_title": existing.title or "Energy Window Tracker"},
+                )
             _LOGGER.info("config flow step user: source_entity=%r, proceeding to windows", self._source_entity)
             try:
                 return await self.async_step_windows()
@@ -410,6 +418,20 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             source_name = (user_input.get("source_name") or "").strip() or _get_entity_friendly_name(self.hass, source_entity)
             source_name = (source_name or "Energy Window Tracker").strip()[:200]
             entry_title = source_name or "Energy Window Tracker"
+            existing = _entry_using_source_entity(self.hass, source_entity, exclude_entry_id=None)
+            if existing is not None:
+                return self.async_show_form(
+                    step_id="windows",
+                    data_schema=_build_windows_schema(
+                        self.hass,
+                        source_entity,
+                        _get_window_rows_from_input(user_input, 1, use_simple_keys=True),
+                        default_source_name=user_input.get("source_name") or _get_entity_friendly_name(self.hass, source_entity),
+                        use_simple_keys=True,
+                    ),
+                    errors={"base": "source_already_in_use"},
+                    description_placeholders={"entry_title": existing.title or "Energy Window Tracker"},
+                )
             _LOGGER.info(
                 "config flow step windows: creating entry title=%r, source=%r, windows=%s",
                 entry_title,
@@ -620,6 +642,29 @@ def _get_sources_from_entry(entry: config_entries.ConfigEntry) -> list[dict[str,
     if isinstance(raw, list):
         return list(raw)
     return []
+
+
+def _entry_using_source_entity(
+    hass: Any,
+    source_entity: str,
+    exclude_entry_id: str | None = None,
+) -> config_entries.ConfigEntry | None:
+    """Return the config entry that uses this source entity, or None. Optionally exclude an entry (e.g. current when updating)."""
+    if not source_entity:
+        return None
+    normalized = source_entity.strip()
+    if not normalized:
+        return None
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if exclude_entry_id and entry.entry_id == exclude_entry_id:
+            continue
+        for src in _get_sources_from_entry(entry):
+            if not isinstance(src, dict):
+                continue
+            existing = str(src.get(CONF_SOURCE_ENTITY) or "").strip()
+            if existing and existing == normalized:
+                return entry
+    return None
 
 
 def _build_init_menu_options() -> dict[str, str]:
@@ -926,6 +971,20 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                     data_schema=_build_source_entity_schema(
                         source_entity, current_name, include_remove_previous=True
                     ),
+                )
+            existing_entry = _entry_using_source_entity(
+                self.hass, new_entity, exclude_entry_id=self._config_entry.entry_id
+            )
+            if existing_entry is not None:
+                return self.async_show_form(
+                    step_id="source_entity",
+                    data_schema=_build_source_entity_schema(
+                        source_entity, current_name, include_remove_previous=True
+                    ),
+                    errors={"base": "source_already_in_use"},
+                    description_placeholders={
+                        "entry_title": existing_entry.title or "Energy Window Tracker"
+                    },
                 )
             custom_name = (user_input.get(CONF_NAME) or "").strip()
             source_name = custom_name or _get_entity_friendly_name(self.hass, new_entity)
